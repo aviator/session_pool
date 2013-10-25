@@ -220,6 +220,25 @@ class Aviator::Test
 
     end
 
+
+    describe '::flush' do
+
+      it 'deletes all keys in Redis that starts with the REDIS_KEY_PREFIX' do
+        keys = ['somestring', 'anotherstring', 'wellthisisanotherstring']
+
+        keys.each do |key|
+          subject[key] = session
+
+          key = subject.send(:build_key, key)
+        end
+
+        subject.flush
+
+        keys.each{ |key| redis.get(key).must_be_nil }
+      end
+
+    end
+
   end
 
 end

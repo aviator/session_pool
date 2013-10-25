@@ -85,6 +85,11 @@ module Aviator
       end
 
 
+      def flush
+        redis.keys("#{ REDIS_KEY_PREFIX }*").each{ |key| redis.del(key) }
+      end
+
+
       private
 
       def build_key(key)

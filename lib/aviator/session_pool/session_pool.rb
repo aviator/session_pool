@@ -8,13 +8,13 @@ module Aviator
         super "Current session is not defined. Make sure to call ::set_current first."
       end
     end
-    
+
     class SessionNotFoundError < StandardError
       def initialize(key)
         super "There is no session with key #{ key } in the pool"
       end
     end
-    
+
 
     REDIS_KEY_PREFIX = 'aviator.session_dumps'
 
@@ -51,6 +51,15 @@ module Aviator
       attr_reader :configuration
       alias :c :configuration
 
+      def create(key, &block)
+        config = configuration.dup
+        [:redis_host, :redis_port].each{|k| config.delete k }
+        session = Aviator::Session.new(config)
+
+        session.authenticate &block
+
+        self[key] = session
+      end
 
       # WARNING: Since get_current uses a class instance variable, it will contain
       # a value between http requests whether set_current was called or not for as long
@@ -62,17 +71,7 @@ module Aviator
 
       def get_or_create(key, &block)
         # If session is invalid or does not exist, self[] will return nil
-        unless session = self[key]
-          config = configuration.dup
-          [:redis_host, :redis_port].each{|k| config.delete k }
-          session = Aviator::Session.new(config)
-
-          session.authenticate &block
-
-          self[key] = session
-        end
-
-        session
+        self.get(key) || self.create(key, &block)
       end
 
 
@@ -80,7 +79,7 @@ module Aviator
       # a single-threaded web application.
       def set_current(key)
         raise SessionNotFoundError.new(key) unless self.get(key)
-        
+
         @current_key = key
       end
 

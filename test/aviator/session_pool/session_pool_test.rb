@@ -123,6 +123,15 @@ class Aviator::Test
 
     end # describe '::get'
 
+    describe '::create' do
+      it 'creates the session when called' do
+        key = 'loadsessionkey'
+
+        subject[key] = session
+
+        subject.create(key).dump.wont_equal session.dump
+      end
+    end
 
     describe '::get_or_create' do
 
@@ -193,8 +202,8 @@ class Aviator::Test
 
         subject.get_current.dump.must_equal s.dump
       end
-      
-      
+
+
       it 'raises an error when the key does not exist' do
         key = 'setcurrentnonexistentsessionkey'
 
